@@ -1,6 +1,6 @@
 select  ppv.customer_id, pp.project_id,
-MAX(CASE WHEN pp.label = 'e-mail' THEN ppv.value END) AS customer_email
-
+MAX(CASE WHEN pp.label = 'e-mail' THEN ppv.value END) AS customer_email,
+MAX(CASE WHEN pp.label = 'avg_message_volume' THEN CAST(ppv.value AS DECIMAL) END) AS avg_message_volume
 FROM
     rekrutacja.project_properties_values ppv
 JOIN
@@ -20,3 +20,5 @@ JOIN (
 GROUP BY
     pp.project_id,
     ppv.customer_id
+HAVING
+    avg_message_volume > 5000
