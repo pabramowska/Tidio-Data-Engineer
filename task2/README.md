@@ -1,7 +1,6 @@
 ### README
 
 
-
 This repository contains SQL code to create a view named `marketing_dataset` in the `rekrutacja` schema. The view consolidates various project properties and filters the data based on specific business criteria for Tidio's marketing activities.
 
 ## Table of Contents
@@ -11,7 +10,6 @@ This repository contains SQL code to create a view named `marketing_dataset` in 
 - [SQL Code](#sql-code)
 - [Explanation](#explanation)
 - [Usage](#usage)
-- [License](#license)
 
 ## Description
 
@@ -236,3 +234,53 @@ To create the `marketing_dataset` view, execute the provided SQL code in your My
     JOIN (
         SELECT 
             ppv.customer_id
+
+, 
+            (CASE WHEN pp.label = 'estimated_client_volume_usd' THEN CAST(ppv.value AS DECIMAL) END) AS estimated_client_volume_usd,
+            ROW_NUMBER() OVER (PARTITION BY ppv.customer_id ORDER BY ppv.create_dte DESC) AS row_num
+        FROM 
+            rekrutacja.project_properties_values ppv
+        JOIN
+            rekrutacja.project_properties pp ON ppv.property_id = pp.id 
+        WHERE 
+            pp.label = 'estimated_client_volume_usd'
+    ) usd ON ppv.customer_id = usd.customer_id AND usd.row_num = 1       
+    JOIN (
+        SELECT 
+            ppv.customer_id, 
+            (CASE WHEN pp.label = 'plan' THEN ppv.value END) AS plan,
+            ROW_NUMBER() OVER (PARTITION BY ppv.customer_id ORDER BY ppv.create_dte DESC) AS row_num
+        FROM 
+            rekrutacja.project_properties_values ppv
+        JOIN
+            rekrutacja.project_properties pp ON ppv.property_id = pp.id 
+        WHERE 
+            pp.label = 'plan'
+    ) plan ON ppv.customer_id = plan.customer_id AND plan.row_num = 1     
+    JOIN (
+        SELECT 
+            ppv.customer_id, 
+            (CASE WHEN pp.label = 'interested_in_product' THEN ppv.value END) AS interested_in_product,
+            ROW_NUMBER() OVER (PARTITION BY ppv.customer_id ORDER BY ppv.create_dte DESC) AS row_num
+        FROM 
+            rekrutacja.project_properties_values ppv
+        JOIN
+            rekrutacja.project_properties pp ON ppv.property_id = pp.id 
+        WHERE 
+            pp.label = 'interested_in_product'
+    ) intr ON ppv.customer_id = intr.customer_id AND intr.row_num = 1    
+    GROUP BY
+        pp.project_id,
+        ppv.customer_id,
+        email.customer_email,
+        volume.avg_message_volume,
+        usd.estimated_client_volume_usd,
+        plan.plan,
+        intr.interested_in_product
+    HAVING
+        avg_message_volume > 5000 
+        AND estimated_client_volume_usd > 1000
+        AND plan = 'Free'
+        AND interested_in_product = 'YES';
+    ```
+
