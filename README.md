@@ -147,6 +147,3 @@ To run the script, open the Jupyter Notebook and run each cell sequentially.
 ### Conclusion
 This script successfully processes the input URLs, extracts the required query parameters, and formats the data as specified. The output is validated against the provided expected output and saved to a TSV file.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
